@@ -280,13 +280,15 @@ void ClearErrors()
    
    //EDIT THESE PARAMETER TO SUITE THE NEED OF YOUR DATABASE
    
-   string Host       = "IP ADDRESS";
-   string User       = "mt4acc";
-   string Password   = "password";
-   string Database   = "database";
+   string Host       = "IP";
+   string User       = "USER";
+   string Password   = "PASSWD";
+   string Database   = "DB_NAME";
    int    Port       = 3306;
    string Socket     = "0";
    int    ClientFlag = 0;  
+   string table      = "TABLE_NAME";  
+   
    
 void database_update_query (int type, string column, double value) //type 1 = buy, 2 = sell
 {
@@ -315,7 +317,7 @@ void database_update_query (int type, string column, double value) //type 1 = bu
    ///END DATABASE INITIALIZATION///
    int Cursor, Rows;
    string Query1, Query2, Query3;
-   Query1="SELECT "+column+" FROM `FIBO` WHERE SYMBOL='"+Symbol()+"'";
+   Query1="SELECT "+column+" FROM `"+table+"` WHERE SYMBOL='"+symbol+"'";
    Cursor = MySqlCursorOpen(DB, Query1);
    if (Cursor >= 0) // cursor opened
    {
@@ -327,17 +329,17 @@ void database_update_query (int type, string column, double value) //type 1 = bu
      if (Rows <= 0) // record not exist
      {
       //Then we create a row for it
-          Query2="INSERT INTO `zadmin_mt4acc`.`FIBO` (`SYMBOL`, `TYPE`,'"+column+"') VALUES ('"+Symbol()+"', '"+type+"', '"+column+"')";
+          Query2="INSERT INTO `"+Database+"`.`"+table+"` (`SYMBOL`, `TYPE`,'"+column+"') VALUES ('"+symbol+"', '"+type+"', '"+column+"')";
           if (!MySqlExecute(DB, Query2))//if failed to insert new row for new symbol
           {
-          Print("Failed to Insert New Row Of "+column+" For Symbol"+Symbol());
+          Print("Failed to Insert New Row Of "+column+" For Symbol"+symbol);
           MySqlCursorClose(Cursor);
           MySqlDisconnect(DB);
           Print ("Disconnected. Script done!");
           }
           else
           {
-          Print("Created New Row Of "+column+" For"+Symbol()+" Successfully");
+          Print("Created New Row Of "+column+" For"+symbol+" Successfully");
           Print(Query2);
           MySqlCursorClose(Cursor);
           MySqlDisconnect(DB);
@@ -350,10 +352,10 @@ void database_update_query (int type, string column, double value) //type 1 = bu
      ///UPDATE BNEW RECORD///
     else//record did exist, so we just update it
     {
-        Query3 ="UPDATE FIBO SET TYPE="+type+", "+column+"="+value+" WHERE BASE_SYMBOL='"+Symbol()+"' ";
+        Query3 ="UPDATE "+table+" SET TYPE="+type+", "+column+"="+value+" WHERE SYMBOL='"+symbol+"' ";
         if (!MySqlExecute(DB, Query3))
         {
-        Print("Failed to Update "+column+"For Symbol"+Symbol());
+        Print("Failed to Update "+column+"For Symbol"+symbol);
         Print(Query3);
         MySqlCursorClose(Cursor);
         MySqlDisconnect(DB);
@@ -361,7 +363,100 @@ void database_update_query (int type, string column, double value) //type 1 = bu
         }
         else
         {
-        Print("Update Row of "+column+" For"+Symbol()+" Successfully");
+        Print("Update Row of "+column+" For"+symbol+" Successfully");
+        Print(Query3);
+        MySqlCursorClose(Cursor);
+        MySqlDisconnect(DB);
+        Print ("Disconnected. Script done!");
+        }
+     
+    }
+    MySqlCursorClose(Cursor);
+    MySqlDisconnect(DB);
+    Print ("Disconnected. Script done!");
+   }
+  
+  MySqlCursorClose(Cursor);
+  MySqlDisconnect(DB);
+  Print ("Disconnected. Script done!");
+}
+
+
+void database_update_multiple_query (int type, string column1, int value1, string column2, double value2,string column3, double value3,string column4, double value4,) //type 1 = buy, 2 = sell
+{
+   ///DATABASE PARAMETERS INITIALIZATION///
+   
+   int DB; // database identifier
+   Print (MySqlVersion());
+
+   //INI = TerminalPath()+"\\MQL4\\Scripts\\MyConnection.ini";
+ 
+   // reading database credentials from INI file
+   
+   string symbol=StringSubstr(Symbol(),0,6);
+   Print ("Host: ",Host, ", User: ", User, ", Database: ",Database);
+   Print ("New Symbol "+symbol);
+ 
+   // open database connection
+   Print ("Connecting Update...");
+ 
+   DB = MySqlConnect(Host, User, Password, Database, Port, Socket, ClientFlag);
+ 
+   if (DB == -1) 
+   { Print ("Connection failed! Error: "+MySqlErrorDescription); } 
+   else 
+   { Print ("Connected Update! DBID#",DB);}
+   ///END DATABASE INITIALIZATION///
+   int Cursor, Rows;
+   string Query1, Query2, Query3;
+   Query1="SELECT "+column1+" FROM `"+table+"` WHERE SYMBOL='"+symbol+"'";
+   Cursor = MySqlCursorOpen(DB, Query1);
+   if (Cursor >= 0) // cursor opened
+   {
+    
+    //Rows = MySqlGetFieldAsString(Cursor);
+    
+     Rows=MySqlCursorRows(Cursor);
+     /// CREATING THE NEW RECORD ///
+     if (Rows <= 0) // record not exist
+     {
+      //Then we create a row for it
+          Query2="INSERT INTO `"+Database+"`.`"+table+"` (`SYMBOL`, `TYPE`,`"+column1+"`,`"+column2+"`,`"+column3+"`,`"+column4+"`) VALUES ('"+symbol+"', '"+type+"', '"+value1+"', '"+value2+"', '"+value3+"', '"+value4+"')";
+          if (!MySqlExecute(DB, Query2))//if failed to insert new row for new symbol
+          {
+          Print("Failed to Insert New Multiple Record For Symbol"+symbol);
+          Print(Query2);
+          MySqlCursorClose(Cursor);
+          MySqlDisconnect(DB);
+          Print ("Disconnected. Script done!");
+          }
+          else
+          {
+          Print("Created New Multilple Record For"+symbol+" Successfully");
+          Print(Query2);
+          MySqlCursorClose(Cursor);
+          MySqlDisconnect(DB);
+          Print ("Disconnected. Script done!");
+          }
+         
+     }
+     /// END CREATING NEW RECORD ///
+    
+     ///UPDATE BNEW RECORD///
+    else//record did exist, so we just update it
+    {
+        Query3 ="UPDATE "+table+" SET TYPE="+type+", "+column1+"="+value1+", "+column2+"="+value2+", "+column3+"="+value3+", "+column4+"="+value4+" WHERE SYMBOL='"+symbol+"' ";
+        if (!MySqlExecute(DB, Query3))
+        {
+        Print("Failed to Update Multiple Column For Symbol"+symbol);
+        Print(Query3);
+        MySqlCursorClose(Cursor);
+        MySqlDisconnect(DB);
+        Print ("Disconnected. Script done!");
+        }
+        else
+        {
+        Print("Update Multiple Column For"+symbol+" Successfully");
         Print(Query3);
         MySqlCursorClose(Cursor);
         MySqlDisconnect(DB);
@@ -406,23 +501,48 @@ void database_delete_entry ()
    int Cursor, Rows;
    string Query1, Query2, Query3;
    
-   Query1 ="DELETE FROM `FIBO` WHERE SYMBOL"+Symbol(); 
-   if (!MySqlExecute(DB, Query1))//if failed to insert new row for new symbol
-   {
-          Print("Failed to Delete Record For"+Symbol());
-          MySqlCursorClose(Cursor);
-          MySqlDisconnect(DB);
-          Print ("Disconnected. Script done!");
-   }
-   else
-   {
-          Print("Delete Old Record For "+Symbol()+" Is Success");
-          Print(Query1);
-          MySqlCursorClose(Cursor);
-          MySqlDisconnect(DB);
-          Print ("Disconnected. Script done!");
-   }
-
+   
+   Query1="SELECT * FROM `"+table+"` WHERE SYMBOL='"+symbol+"'";  //as if no record inside, we do nothing
+   Cursor = MySqlCursorOpen(DB, Query1);
+   
+   if (Cursor >= 0) //CURSOR OPENED
+   { 
+         Rows=MySqlCursorRows(Cursor);
+         if (Rows <= 0)//record not exist
+         {
+           Print ("Do Nothing As No Record Found For Symbol "+symbol);
+           MySqlCursorClose(Cursor);
+           MySqlDisconnect(DB);
+           Print ("Disconnected. Script done!");
+         
+         }
+         
+         else
+         {
+   
+               Query2 ="DELETE FROM `"+table+"` WHERE SYMBOL='"+symbol+"'"; 
+               if (!MySqlExecute(DB, Query2))//if failed to insert new row for new symbol
+               {
+                      Print("Failed to Delete Record For "+symbol);
+                      Print(Query2);
+                      MySqlCursorClose(Cursor);
+                      MySqlDisconnect(DB);
+                      Print ("Disconnected. Script done!");
+               }
+               else
+               {
+                      Print("Delete Old Record For "+symbol+" Is Success");
+                      Print(Query2);
+                      MySqlCursorClose(Cursor);
+                      MySqlDisconnect(DB);
+                      Print ("Disconnected. Script done!");
+               }
+        }
+        
+      MySqlCursorClose(Cursor);
+      MySqlDisconnect(DB);
+      Print ("Disconnected. Script done!");
+    }
 }
 
 double database_fetch_double (string column)
@@ -451,7 +571,7 @@ double database_fetch_double (string column)
    string Query1, Query2, Query3;
    double value;
    
-   Query1="SELECT "+column+" FROM `FIBO` WHERE SYMBOL='"+Symbol()+"'";
+   Query1="SELECT "+column+" FROM `"+table+"` WHERE SYMBOL='"+symbol+"'";
    Cursor = MySqlCursorOpen(DB, Query1);
    
    if (Cursor >= 0) //CURSOR OPENED
@@ -459,7 +579,7 @@ double database_fetch_double (string column)
          Rows=MySqlCursorRows(Cursor);
          if (Rows <= 0)//record not exist
          {
-           Print ("No Record Found For"+column+" of Symbol"+Symbol());
+           Print ("No Record Found For"+column+" of Symbol "+symbol);
            MySqlCursorClose(Cursor);
            MySqlDisconnect(DB);
            Print ("Disconnected. Script done!");
@@ -473,7 +593,7 @@ double database_fetch_double (string column)
              value = MySqlGetFieldAsDouble(Cursor, 0);
              MySqlCursorClose(Cursor);
              MySqlDisconnect(DB);
-             Print ("Data of "+column+" for Symbol "+Symbol()+"is found");
+             Print ("Data of "+column+" for Symbol "+symbol+" is found");
              Print ("Disconnected. Script done!");
               
              return(value);//NO TRADE
@@ -483,7 +603,7 @@ double database_fetch_double (string column)
            {
               MySqlCursorClose(Cursor);
               MySqlDisconnect(DB);
-              Print ("Cannot Find Data of "+column+" for Symbol "+Symbol());
+              Print ("Cannot Find Data of "+column+" for Symbol "+symbol);
               Print ("Disconnected. Script done!");
               
               return(0);//NO TRADE
@@ -529,7 +649,7 @@ int database_fetch_integer (string column)
    string Query1, Query2, Query3;
    double value;
    
-   Query1="SELECT "+column+" FROM `FIBO` WHERE SYMBOL='"+Symbol()+"'";
+   Query1="SELECT "+column+" FROM `"+table+"` WHERE SYMBOL='"+symbol+"'";
    Cursor = MySqlCursorOpen(DB, Query1);
    
    if (Cursor >= 0) //CURSOR OPENED
@@ -537,7 +657,7 @@ int database_fetch_integer (string column)
          Rows=MySqlCursorRows(Cursor);
          if (Rows <= 0)//record not exist
          {
-           Print ("No Record Found For"+column+" of Symbol"+Symbol());
+           Print ("No Record Found For "+column+" of Symbol"+symbol);
            MySqlCursorClose(Cursor);
            MySqlDisconnect(DB);
            Print ("Disconnected. Script done!");
@@ -551,7 +671,7 @@ int database_fetch_integer (string column)
              value = MySqlGetFieldAsInt(Cursor, 0);
              MySqlCursorClose(Cursor);
              MySqlDisconnect(DB);
-             Print ("Data of "+column+" for Symbol "+Symbol()+"is found");
+             Print ("Data of "+column+" for Symbol "+symbol+" is found");
              Print ("Disconnected. Script done!");
               
              return(value);//NO TRADE
@@ -561,7 +681,7 @@ int database_fetch_integer (string column)
            {
               MySqlCursorClose(Cursor);
               MySqlDisconnect(DB);
-              Print ("Cannot Find Data of "+column+" for Symbol "+Symbol());
+              Print ("Cannot Find Data of "+column+" for Symbol "+symbol);
               Print ("Disconnected. Script done!");
               
               return(0);//NO TRADE
